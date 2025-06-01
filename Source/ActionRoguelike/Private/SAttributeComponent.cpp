@@ -13,7 +13,10 @@ bool USAttributeComponent::ApplyHealthChange( AActor* Instigator, float Delta)
 {
 	if (Health > 0)
 	{
-		Health += Delta;		
+		Health += Delta;
+		
+		UE_LOG(LogTemp, Display, TEXT("%s Health=%f"), *GetOwner()->GetName(), Health);
+		
 		OnHealthChanged.Broadcast(Instigator, this, Health, Delta);
 
 		if (Health <= 0)
