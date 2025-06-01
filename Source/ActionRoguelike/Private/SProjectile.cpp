@@ -1,7 +1,11 @@
 #include "SProjectile.h"
+
+#include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Sound/SoundCue.h"
 
 
 // Sets default values
@@ -23,6 +27,9 @@ ASProjectile::ASProjectile()
 	MovementComp->bRotationFollowsVelocity = true;
 	MovementComp->bInitialVelocityInLocalSpace = true;
 
+	AudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComp");
+	AudioComp->SetupAttachment(RootComponent);
+	
 		
 }
 
@@ -32,6 +39,7 @@ void ASProjectile::BeginPlay()
 	Super::BeginPlay();
 
 	SphereComp->IgnoreActorWhenMoving(GetInstigator(), true);
+	//AudioComp->Play();
 }
 
 void ASProjectile::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -40,6 +48,20 @@ void ASProjectile::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 	UE_LOG(LogTemp, Display, TEXT("Hit %s"), *OtherActor->GetName());
 	
 }
+
+void ASProjectile::Impact()
+{
+	if (ImpactFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactFX, GetActorLocation(), GetActorRotation());
+	}
+
+	if (ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, GetActorLocation());
+	}
+}
+
 
 // Called every frame
 void ASProjectile::Tick(float DeltaTime)

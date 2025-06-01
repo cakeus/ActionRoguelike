@@ -26,12 +26,24 @@ public:
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	TObjectPtr<UParticleSystemComponent> EffectComp;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
+	TObjectPtr<UAudioComponent> AudioComp;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<USoundCue> ImpactSound;
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UParticleSystem> ImpactFX;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	virtual void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	void Impact();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

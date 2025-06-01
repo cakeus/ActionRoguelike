@@ -35,6 +35,8 @@ void ASMagicProjectile::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 			AttributeComp->ApplyHealthChange(GetInstigator(), -30.0f);
 		}
 
+		Impact();
+		
 		Destroy();
 	}
 }
