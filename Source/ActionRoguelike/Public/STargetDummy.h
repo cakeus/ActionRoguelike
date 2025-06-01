@@ -3,27 +3,32 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SProjectile.h"
 #include "GameFramework/Actor.h"
-#include "SMagicProjectile.generated.h"
-
-class UProjectileMovementComponent;
-class USphereComponent;
+#include "STargetDummy.generated.h"
 
 UCLASS()
-class ACTIONROGUELIKE_API ASMagicProjectile : public ASProjectile
+class ACTIONROGUELIKE_API ASTargetDummy : public AActor
 {
 	GENERATED_BODY()
 	
 public:
+
 	// Sets default values for this actor's properties
-	ASMagicProjectile();
+	ASTargetDummy();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+	UFUNCTION()
+	void OnHealthChanged(AActor* ActorInstigator, class USAttributeComponent* OwningComp, float NewHealth, float Delta);
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USAttributeComponent> AttributeComp;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
+	TObjectPtr<UStaticMeshComponent> MeshComp;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class USAttributeComponent;
 class USInteractionComponent;
 class UInputMappingContext;
 class UInputAction;
@@ -41,8 +42,17 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USInteractionComponent> InteractionComp;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USAttributeComponent> AttributeComp;
+	
 	UPROPERTY(EditAnywhere,Category="Attack")
 	TSubclassOf<AActor> ProjectileClass;
+
+	UPROPERTY(EditAnywhere,Category="Attack")
+	TSubclassOf<AActor> SpecialProjectileClass;
+
+	UPROPERTY(EditAnywhere,Category="Attack")
+	TSubclassOf<AActor> DashProjectileClass;
 	
 	UPROPERTY(EditAnywhere,Category="Attack")
 	TObjectPtr<UAnimMontage> AttackAnim;
@@ -62,7 +72,15 @@ protected:
 	// Primary attack action (Enhanced Input System)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> PrimaryAttackAction;
-	
+
+	// Secondary attack action (Enhanced Input System)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> SecondaryAttackAction;
+
+	// Dash attack action (Enhanced Input System)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction>DashAttackAction;
+		
 	// Movement action (Enhanced Input System)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> MoveAction;
@@ -71,9 +89,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
 
-
-	void PrimaryAttackTimeElapsed();
+	FVector TargetLocation;
+	TSubclassOf<AActor> AttackProjectileClass;
+	
+	void AttackTimeElapsed();
+	
 	void PrimaryAttack();
+	void SecondaryAttack();
+	void DashAttack();
+
+	void StartProjectileAttack(TSubclassOf<AActor> ProjectileClass);
+	
 	
 	void Interact();
 public:	

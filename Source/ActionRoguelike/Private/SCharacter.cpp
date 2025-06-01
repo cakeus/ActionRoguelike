@@ -8,6 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "SAttributeComponent.h"
 #include "SInteractionComponent.h"
 #include "EntitySystem/MovieSceneEntitySystemRunner.h"
 
@@ -26,6 +27,8 @@ ASCharacter::ASCharacter()
 
 	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("InteractionComp");
 
+	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
+	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	
 	bUseControllerRotationYaw = false;
@@ -46,22 +49,68 @@ void ASCharacter::BeginPlay()
 }
 
 
-void ASCharacter::PrimaryAttackTimeElapsed()
+void ASCharacter::AttackTimeElapsed()
 {
 	FVector HandPos = GetMesh()->GetSocketLocation("Muzzle_01");
-	FTransform SpawnTM = FTransform(GetControlRotation(),HandPos);
+
+	FVector TargetDir = (TargetLocation - HandPos).GetSafeNormal();
+	UE_LOG(LogTemp, Warning, TEXT("TargetLocation: %s"), *TargetLocation.ToString());
+	FTransform SpawnTM = FTransform(TargetDir.ToOrientationRotator(),HandPos);
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParams.Instigator = this;
-	GetWorld()->SpawnActor<AActor>(ProjectileClass,SpawnTM,SpawnParams);
+	GetWorld()->SpawnActor<AActor>(AttackProjectileClass,SpawnTM,SpawnParams);
 }
 
 void ASCharacter::PrimaryAttack()
 {
-	PlayAnimMontage(AttackAnim);
+	StartProjectileAttack(ProjectileClass);
+}
 
+void ASCharacter::SecondaryAttack()
+{	
+	StartProjectileAttack(SpecialProjectileClass);
+}
+
+void ASCharacter::DashAttack()
+{
+	StartProjectileAttack(DashProjectileClass);
+}
+
+void ASCharacter::StartProjectileAttack(TSubclassOf<AActor> ProjClass)
+{
+	FHitResult HitResult;
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);	
+	//ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+	
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (!PlayerController) return;
+
+	FVector CameraLocation;
+	FRotator CameraRotation;
+	PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
+	
+	FVector Start = CameraLocation;
+	FRotator Rotation = CameraRotation;
+	FVector End = Start + Rotation.Vector() *  10000.0f;
+	if (GetWorld()->LineTraceSingleByObjectType(HitResult, Start, End, ObjectQueryParams))
+	{
+		TargetLocation = HitResult.Location;
+	}
+	else
+	{
+		TargetLocation = End;
+	}	
+	
+	PlayAnimMontage(AttackAnim);
+	AttackProjectileClass = ProjClass;
+	
 	FTimerHandle TimerHandle_PrimaryAttack;
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this,&ASCharacter::PrimaryAttackTimeElapsed, 0.2f);
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this,&ASCharacter::AttackTimeElapsed, 0.2f);
 }
 
 void ASCharacter::Interact()
@@ -136,6 +185,8 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASCharacter::Look);
 		EnhancedInputComponent->BindAction(PrimaryAttackAction, ETriggerEvent::Triggered, this, &ASCharacter::PrimaryAttack);
+		EnhancedInputComponent->BindAction(SecondaryAttackAction, ETriggerEvent::Triggered, this, &ASCharacter::SecondaryAttack);
+		EnhancedInputComponent->BindAction(DashAttackAction, ETriggerEvent::Triggered, this, &ASCharacter::DashAttack);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASCharacter::Jump);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASCharacter::Interact);
 	}
