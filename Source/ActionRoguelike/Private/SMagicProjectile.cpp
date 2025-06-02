@@ -28,7 +28,7 @@ void ASMagicProjectile::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 
 	Super::OnOverlap(OverlappedComponent, OtherActor,OtherComp,OtherBodyIndex,bFromSweep,SweepResult);
 	
-	if (OtherActor && OtherActor != GetInstigator())
+	if (OtherActor && OtherActor != GetInstigator() && !OtherActor->IsA(ASProjectile::StaticClass()))
 	{
 		if (auto AttributeComp = OtherActor->GetComponentByClass<USAttributeComponent>())
 		{

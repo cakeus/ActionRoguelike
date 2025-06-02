@@ -28,6 +28,7 @@ ASCharacter::ASCharacter()
 	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("InteractionComp");
 
 	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
+
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	
@@ -38,6 +39,8 @@ ASCharacter::ASCharacter()
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+
 	// Add input mapping context to the Enhanced Input subsystem
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -46,6 +49,12 @@ void ASCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+}
+
+void ASCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	AttributeComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 }
 
 
@@ -116,6 +125,17 @@ void ASCharacter::StartProjectileAttack(TSubclassOf<AActor> ProjClass)
 void ASCharacter::Interact()
 {
 	InteractionComp->PrimaryInteract();
+}
+
+void ASCharacter::OnHealthChanged(AActor* ActorInstigator, class USAttributeComponent* OwningComp, float NewHealth,
+	float Delta)
+{
+	auto mesh = GetMesh();
+	if (ensure(mesh))
+	{
+		mesh->SetScalarParameterValueOnMaterials(FName("TimeToHit"), GetWorld()->TimeSeconds);	
+	}
+	
 }
 
 // Called every frame
@@ -196,5 +216,12 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("Turn",this,&APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("Lookup",this,&APawn::AddControllerPitchInput);*/
 	//PlayerInputComponent->BindAction("PrimaryAttack",IE_Pressed,this,&ASCharacter::PrimaryAttack);
+}
+
+void ASCharacter::Die()
+{
+	GetCharacterMovement()->StopMovementImmediately();
+	auto playerController = Cast<APlayerController>(GetController());
+	DisableInput(playerController);
 }
 

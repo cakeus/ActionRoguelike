@@ -3,17 +3,34 @@
 
 #include "SAttributeComponent.h"
 
+#include "SCharacter.h"
+
 // Sets default values for this component's properties
 USAttributeComponent::USAttributeComponent()
 {
 	Health = 100.0f;
+	HealthMax = 100.0f;
+	bWantsInitializeComponent = true;
+}
+
+
+bool USAttributeComponent::IsAlive() const
+{
+	return Health > 0.0f;
+}
+
+void USAttributeComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	Health = HealthMax;
+	UE_LOG(LogTemp, Warning, TEXT("USAttributeComponent::InitializeComponent Actor=%s HealthMax=%f"), *GetOwner()->GetName(), HealthMax);
 }
 
 bool USAttributeComponent::ApplyHealthChange( AActor* Instigator, float Delta)
 {
 	if (Health > 0)
 	{
-		Health += Delta;
+		Health = FMath::Clamp(Health+ Delta,0,HealthMax);
 		
 		UE_LOG(LogTemp, Display, TEXT("%s Health=%f"), *GetOwner()->GetName(), Health);
 		
@@ -21,7 +38,15 @@ bool USAttributeComponent::ApplyHealthChange( AActor* Instigator, float Delta)
 
 		if (Health <= 0)
 		{
-			GetOwner()->Destroy();
+			if (GetOwner()->GetRootComponent()->IsSimulatingPhysics())
+			{
+				GetOwner()->Destroy();
+			}
+
+			if (auto Character = Cast<ASCharacter>(GetOwner()))
+			{
+				Character->Die();
+			}
 		}
 		return true;
 	}

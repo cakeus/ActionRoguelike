@@ -39,6 +39,7 @@ void ASProjectile::BeginPlay()
 	Super::BeginPlay();
 
 	SphereComp->IgnoreActorWhenMoving(GetInstigator(), true);
+	
 	//AudioComp->Play();
 }
 

@@ -27,6 +27,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual void PostInitializeComponents() override;
+
 	// Movement input handling
 	void Move(const FInputActionValue& Value);
 
@@ -102,6 +104,10 @@ protected:
 	
 	
 	void Interact();
+
+	UFUNCTION()
+	void OnHealthChanged(AActor* ActorInstigator, class USAttributeComponent* OwningComp, float NewHealth, float Delta);
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -110,4 +116,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable)
+	virtual void Die();
 };

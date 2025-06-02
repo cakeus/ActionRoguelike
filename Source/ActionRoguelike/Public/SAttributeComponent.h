@@ -18,10 +18,18 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnHealthChanged;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsAlive() const;
+
+	virtual void InitializeComponent() override;
 protected:
 	
-	UPROPERTY(BlueprintReadOnly,EditDefaultsOnly,Category="Attributes")
+	UPROPERTY(BlueprintReadOnly,Category="Attributes")
 	float Health;
+	
+	UPROPERTY(BlueprintReadOnly,EditDefaultsOnly,Category="Attributes")
+	float HealthMax;
 
 public:
 	UFUNCTION(BlueprintCallable,Category="Attributes")
