@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class ASProjectile;
 class USAttributeComponent;
 class USInteractionComponent;
 class UInputMappingContext;
@@ -48,13 +49,13 @@ protected:
 	TObjectPtr<USAttributeComponent> AttributeComp;
 	
 	UPROPERTY(EditAnywhere,Category="Attack")
-	TSubclassOf<AActor> ProjectileClass;
+	TSubclassOf<ASProjectile> ProjectileClass;
 
 	UPROPERTY(EditAnywhere,Category="Attack")
-	TSubclassOf<AActor> SpecialProjectileClass;
+	TSubclassOf<ASProjectile> SpecialProjectileClass;
 
 	UPROPERTY(EditAnywhere,Category="Attack")
-	TSubclassOf<AActor> DashProjectileClass;
+	TSubclassOf<ASProjectile> DashProjectileClass;
 	
 	UPROPERTY(EditAnywhere,Category="Attack")
 	TObjectPtr<UAnimMontage> AttackAnim;
@@ -100,7 +101,7 @@ protected:
 	void SecondaryAttack();
 	void DashAttack();
 
-	void StartProjectileAttack(TSubclassOf<AActor> ProjectileClass);
+	void StartProjectileAttack(TSubclassOf<ASProjectile> ProjectileClass);
 	
 	
 	void Interact();

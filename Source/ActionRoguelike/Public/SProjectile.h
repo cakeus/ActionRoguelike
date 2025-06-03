@@ -32,10 +32,16 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USoundCue> ImpactSound;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShakeBase> CameraShake;
+	
 	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UParticleSystem> ImpactFX;
 	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UParticleSystem> CastFX;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

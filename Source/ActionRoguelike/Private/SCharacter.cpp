@@ -10,7 +10,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "SAttributeComponent.h"
 #include "SInteractionComponent.h"
+#include "SProjectile.h"
 #include "EntitySystem/MovieSceneEntitySystemRunner.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -86,7 +88,7 @@ void ASCharacter::DashAttack()
 	StartProjectileAttack(DashProjectileClass);
 }
 
-void ASCharacter::StartProjectileAttack(TSubclassOf<AActor> ProjClass)
+void ASCharacter::StartProjectileAttack(TSubclassOf<ASProjectile> ProjClass)
 {
 	FHitResult HitResult;
 	FCollisionObjectQueryParams ObjectQueryParams;
@@ -94,11 +96,17 @@ void ASCharacter::StartProjectileAttack(TSubclassOf<AActor> ProjClass)
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);	
 	//ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
-	
+	auto CastFX =ProjClass->GetDefaultObject<ASProjectile>()->CastFX;
+	if (CastFX)
+	{
+		UGameplayStatics::SpawnEmitterAttached(CastFX,GetMesh(),FName("Muzzle_01"));
+	}
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (!PlayerController) return;
 
+
+	
 	FVector CameraLocation;
 	FRotator CameraRotation;
 	PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
@@ -127,13 +135,15 @@ void ASCharacter::Interact()
 	InteractionComp->PrimaryInteract();
 }
 
-void ASCharacter::OnHealthChanged(AActor* ActorInstigator, class USAttributeComponent* OwningComp, float NewHealth,
-	float Delta)
+void ASCharacter::OnHealthChanged(AActor* ActorInstigator, class USAttributeComponent* OwningComp, float NewHealth, float Delta)
 {
-	auto mesh = GetMesh();
-	if (ensure(mesh))
-	{
-		mesh->SetScalarParameterValueOnMaterials(FName("TimeToHit"), GetWorld()->TimeSeconds);	
+	if (Delta < 0)
+	{		
+		auto MeshComp = GetMesh();
+		if (ensure(MeshComp))
+		{
+			MeshComp->SetScalarParameterValueOnMaterials(FName("TimeToHit"), GetWorld()->TimeSeconds);	
+		}
 	}
 	
 }
@@ -143,21 +153,21 @@ void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// -- Rotation Visualization -- //
-	const float DrawScale = 100.0f;
-	const float Thickness = 5.0f;
-
-	FVector LineStart = GetActorLocation();
-	// Offset to the right of pawn
-	LineStart += GetActorRightVector() * 100.0f;
-	// Set line end in direction of the actor's forward
-	FVector ActorDirection_LineEnd = LineStart + (GetActorForwardVector() * 100.0f);
-	// Draw Actor's Direction
-	DrawDebugDirectionalArrow(GetWorld(), LineStart, ActorDirection_LineEnd, DrawScale, FColor::Yellow, false, 0.0f, 0, Thickness);
-
-	FVector ControllerDirection_LineEnd = LineStart + (GetControlRotation().Vector() * 100.0f);
-	// Draw 'Controller' Rotation ('PlayerController' that 'possessed' this character)
-	DrawDebugDirectionalArrow(GetWorld(), LineStart, ControllerDirection_LineEnd, DrawScale, FColor::Green, false, 0.0f, 0, Thickness);
+	// // -- Rotation Visualization -- //
+	// const float DrawScale = 100.0f;
+	// const float Thickness = 5.0f;
+	//
+	// FVector LineStart = GetActorLocation();
+	// // Offset to the right of pawn
+	// LineStart += GetActorRightVector() * 100.0f;
+	// // Set line end in direction of the actor's forward
+	// FVector ActorDirection_LineEnd = LineStart + (GetActorForwardVector() * 100.0f);
+	// // Draw Actor's Direction
+	// DrawDebugDirectionalArrow(GetWorld(), LineStart, ActorDirection_LineEnd, DrawScale, FColor::Yellow, false, 0.0f, 0, Thickness);
+	//
+	// FVector ControllerDirection_LineEnd = LineStart + (GetControlRotation().Vector() * 100.0f);
+	// // Draw 'Controller' Rotation ('PlayerController' that 'possessed' this character)
+	// DrawDebugDirectionalArrow(GetWorld(), LineStart, ControllerDirection_LineEnd, DrawScale, FColor::Green, false, 0.0f, 0, Thickness);
 
 }
 

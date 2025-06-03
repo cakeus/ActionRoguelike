@@ -23,7 +23,20 @@ void USInteractionComponent::PrimaryInteract()
 
 	FVector Start;
 	FRotator Rotation;
-	GetOwner()->GetActorEyesViewPoint(Start,Rotation);
+
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!Pawn)
+	{
+		return;
+	}
+	
+	APlayerController* PlayerController = Cast<APlayerController>(Pawn->GetController());
+	if (!PlayerController)
+	{
+		return;
+	}
+	
+	PlayerController->GetPlayerViewPoint(Start, Rotation);
 
 	FVector End = Start + Rotation.Vector() *  1000.0f;
 	GetWorld()->LineTraceSingleByObjectType(HitResult, Start, End, ObjectQueryParams);
@@ -36,7 +49,7 @@ void USInteractionComponent::PrimaryInteract()
 		}
 	}
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 10.0f);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 10.0f);
 }
 
 

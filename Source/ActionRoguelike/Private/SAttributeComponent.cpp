@@ -28,7 +28,7 @@ void USAttributeComponent::InitializeComponent()
 
 bool USAttributeComponent::ApplyHealthChange( AActor* Instigator, float Delta)
 {
-	if (Health > 0)
+	if (Health > 0 || Health < HealthMax)
 	{
 		Health = FMath::Clamp(Health+ Delta,0,HealthMax);
 		

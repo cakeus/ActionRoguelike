@@ -61,6 +61,11 @@ void ASProjectile::Impact()
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, GetActorLocation());
 	}
+
+	if (CameraShake && GetInstigator() != nullptr)
+	{
+		UGameplayStatics::PlayWorldCameraShake(GetWorld(),CameraShake,GetActorLocation(),0,5000.0f);
+	}
 }
 
 
