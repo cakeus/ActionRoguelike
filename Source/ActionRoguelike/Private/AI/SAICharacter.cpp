@@ -4,6 +4,7 @@
 #include "AI/SAICharacter.h"
 
 #include "AIController.h"
+#include "SAttributeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/PawnSensingComponent.h"
 
@@ -11,6 +12,9 @@
 ASAICharacter::ASAICharacter()
 {
 	PawnSense = CreateDefaultSubobject<UPawnSensingComponent>("PawnSense");
+	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
+	
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 void ASAICharacter::PostInitializeComponents()
@@ -18,6 +22,7 @@ void ASAICharacter::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	PawnSense->OnSeePawn.AddDynamic(this, &ASAICharacter::OnPawnSeen);
+	AttributeComp->OnHealthChanged.AddDynamic(this, &ASAICharacter::OnHealthChanged);
 }
 
 void ASAICharacter::OnPawnSeen(APawn* Pawn)
@@ -27,9 +32,12 @@ void ASAICharacter::OnPawnSeen(APawn* Pawn)
 	{
 		auto BBC = AIC->GetBlackboardComponent();
 		BBC->SetValueAsObject("TargetActor",Pawn);
-
-		DrawDebugString(GetWorld(), GetActorLocation(), "PLAYER SPOTTED");
 	}
+}
+
+void ASAICharacter::OnHealthChanged(AActor* ActorInstigator, class USAttributeComponent* OwningComp, float NewHealth,
+	float Delta)
+{
 }
 
 
