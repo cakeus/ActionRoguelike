@@ -24,7 +24,7 @@ AExplosiveBarrel::AExplosiveBarrel()
 void AExplosiveBarrel::BeginPlay()
 {
 	Super::BeginPlay();
-	MeshComp->OnComponentHit.AddDynamic(this, &AExplosiveBarrel::OnHit);
+	MeshComp->OnComponentHit.AddUniqueDynamic(this, &AExplosiveBarrel::OnHit);
 }
 
 void AExplosiveBarrel::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,

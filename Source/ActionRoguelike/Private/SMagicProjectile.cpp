@@ -13,7 +13,7 @@
 // Sets default values
 ASMagicProjectile::ASMagicProjectile()
 {
-	
+	Damage = 30;	
 }
 
 // Called when the game starts or when spawned
@@ -32,7 +32,7 @@ void ASMagicProjectile::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto AttributeComp = OtherActor->GetComponentByClass<USAttributeComponent>())
 		{
-			AttributeComp->ApplyHealthChange(GetInstigator(), -30.0f);
+			AttributeComp->ApplyHealthChange(GetInstigator(), -Damage);
 		}
 
 		Impact();

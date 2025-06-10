@@ -16,6 +16,9 @@ class ACTIONROGUELIKE_API USAttributeComponent : public UActorComponent
 public:	
 	USAttributeComponent();
 
+	UFUNCTION(BlueprintCallable)
+	static bool IsActorAlive(AActor* Actor);
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnHealthChanged;
 
@@ -23,6 +26,13 @@ public:
 	bool IsAlive() const;
 
 	virtual void InitializeComponent() override;
+
+	UFUNCTION(BlueprintCallable)
+	float GetHealthPercent() const;
+
+	UFUNCTION(BlueprintCallable)
+	float GetHealthMax() const;
+
 protected:
 	
 	UPROPERTY(BlueprintReadOnly,Category="Attributes")

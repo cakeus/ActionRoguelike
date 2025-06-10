@@ -13,6 +13,22 @@ USAttributeComponent::USAttributeComponent()
 	bWantsInitializeComponent = true;
 }
 
+bool USAttributeComponent::IsActorAlive(AActor* Actor)
+{
+	if (Actor == nullptr)
+	{
+		return false;
+	}
+
+	auto AttrComp = Actor->FindComponentByClass<USAttributeComponent>();
+	if (AttrComp == nullptr)
+	{
+		return false;
+	}
+
+	return AttrComp->IsAlive();
+}
+
 
 bool USAttributeComponent::IsAlive() const
 {
@@ -26,6 +42,16 @@ void USAttributeComponent::InitializeComponent()
 	UE_LOG(LogTemp, Warning, TEXT("USAttributeComponent::InitializeComponent Actor=%s HealthMax=%f"), *GetOwner()->GetName(), HealthMax);
 }
 
+float USAttributeComponent::GetHealthPercent() const
+{
+	return Health / HealthMax;
+}
+
+float USAttributeComponent::GetHealthMax() const
+{
+	return HealthMax;
+}
+
 bool USAttributeComponent::ApplyHealthChange( AActor* Instigator, float Delta)
 {
 	if (Health > 0 || Health < HealthMax)
@@ -33,9 +59,11 @@ bool USAttributeComponent::ApplyHealthChange( AActor* Instigator, float Delta)
 		Health = FMath::Clamp(Health+ Delta,0,HealthMax);
 		
 		UE_LOG(LogTemp, Display, TEXT("%s Health=%f"), *GetOwner()->GetName(), Health);
+		if (Delta != 0)
+		{
+			OnHealthChanged.Broadcast(Instigator, this, Health, Delta);
+		}
 		
-		OnHealthChanged.Broadcast(Instigator, this, Health, Delta);
-
 		if (Health <= 0)
 		{
 			if (GetOwner()->GetRootComponent()->IsSimulatingPhysics())

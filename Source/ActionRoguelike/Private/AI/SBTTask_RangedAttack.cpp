@@ -4,6 +4,7 @@
 #include "AI/SBTTask_RangedAttack.h"
 
 #include "AIController.h"
+#include "SAttributeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/Character.h"
 
@@ -27,9 +28,18 @@ EBTNodeResult::Type USBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& O
 		return EBTNodeResult::Failed;
 	}
 
+	if (!USAttributeComponent::IsActorAlive(TargetActor))
+	{
+		return EBTNodeResult::Failed;
+	}
+
 	FVector ToTarget = TargetActor->GetActorLocation() - SpawnPos;
 
-	FTransform SpawnTM = FTransform(ToTarget.ToOrientationRotator(),SpawnPos);
+	FRotator SpawnRot = ToTarget.ToOrientationRotator();
+	SpawnRot.Pitch += FMath::RandRange(-1.0f,1.0f);
+	SpawnRot.Yaw += FMath::RandRange(-5.0f,5.0f);
+	
+	FTransform SpawnTM = FTransform(SpawnRot,SpawnPos);
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParams.Instigator = Owner;
