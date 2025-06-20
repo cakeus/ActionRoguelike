@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+struct FInputActionInstance;
+class USActionComponent;
 class ASProjectile;
 class USAttributeComponent;
 class USInteractionComponent;
@@ -42,11 +44,14 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArmComp;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	TObjectPtr<USInteractionComponent> InteractionComp;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	TObjectPtr<USAttributeComponent> AttributeComp;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
+	TObjectPtr<USActionComponent> ActionComp;
 	
 	UPROPERTY(EditAnywhere,Category="Attack")
 	TSubclassOf<ASProjectile> ProjectileClass;
@@ -92,6 +97,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
 
+	// Sprint Action (Enhanced Input System)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> SprintAction;
+
+	
 	FVector TargetLocation;
 	TSubclassOf<AActor> AttackProjectileClass;
 	
@@ -100,6 +110,7 @@ protected:
 	void PrimaryAttack();
 	void SecondaryAttack();
 	void DashAttack();
+	void Sprint(const FInputActionInstance& InputAction);
 
 	void StartProjectileAttack(TSubclassOf<ASProjectile> ProjectileClass);
 	
@@ -108,6 +119,7 @@ protected:
 
 	UFUNCTION()
 	void OnHealthChanged(AActor* ActorInstigator, class USAttributeComponent* OwningComp, float NewHealth, float Delta);
+
 	
 public:	
 	// Called every frame
@@ -119,4 +131,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Die();
+	
+	UFUNCTION(Exec)
+	void HealSelf(float Amount = 100);
+
+	virtual FVector GetPawnViewLocation() const override;
 };

@@ -18,10 +18,18 @@ public:
 
 	virtual void Interact_Implementation(APawn* InstigatorPawn) override;
 	
+
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	UPROPERTY(BlueprintReadOnly, Replicated, ReplicatedUsing=OnRep_LidOpen)
+	bool bLidOpen;
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnRep_LidOpen();
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> BaseMesh;

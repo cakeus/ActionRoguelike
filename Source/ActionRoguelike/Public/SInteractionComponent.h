@@ -7,6 +7,8 @@
 #include "SInteractionComponent.generated.h"
 
 
+class USWorldUserWidget;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ACTIONROGUELIKE_API USInteractionComponent : public UActorComponent
 {
@@ -17,11 +19,25 @@ public:
 	USInteractionComponent();
 
 	void PrimaryInteract();
+
+	void FindBestInteractable();
+
+	UFUNCTION(Server, Reliable)
+	void ServerInteract(AActor *TargetActor);
 	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	UPROPERTY()
+	TObjectPtr<AActor> FocusedActor;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<USWorldUserWidget> WidgeClass;
+
+	UPROPERTY()
+	TObjectPtr<USWorldUserWidget> Widget;
+	
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

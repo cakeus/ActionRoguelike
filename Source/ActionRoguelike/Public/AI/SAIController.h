@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "SAIController.generated.h"
 
+class USWorldUserWidget;
 /**
  * 
  */
@@ -20,4 +21,5 @@ class ACTIONROGUELIKE_API ASAIController : public AAIController
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
+
 };

@@ -6,8 +6,14 @@
 #include "AIController.h"
 #include "BrainComponent.h"
 #include "SAttributeComponent.h"
+#include "SPlayerState.h"
+#include "SWorldUserWidget.h"
+#include "Actions/SActionComponent.h"
 #include "AI/SAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/PawnSensingComponent.h"
 
 // Sets default values
@@ -17,6 +23,14 @@ ASAICharacter::ASAICharacter()
 	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
 	
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	// Enabled on mesh to react to incoming projectiles
+	USkeletalMeshComponent* SkelMesh = GetMesh();
+	SkelMesh->SetGenerateOverlapEvents(true);
+	// Skip performing overlap queries on the Physics Asset after animation (17 queries in case of our MinionRangedBP)
+	SkelMesh->bUpdateOverlapsOnAnimationFinalize = false;
+
+	ActionComp = CreateDefaultSubobject<USActionComponent>("ActionComp");
 }
 
 void ASAICharacter::PostInitializeComponents()
@@ -32,8 +46,37 @@ void ASAICharacter::OnPawnSeen(APawn* Pawn)
 	SetTargetActor(Pawn);
 }
 
+
+
+void ASAICharacter::ConvertToRagdoll(AActor* ActorInstigator)
+{
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
+	GetMesh()->SetCollisionProfileName("Ragdoll");
+}
+
+void ASAICharacter::Die(AActor* ActorInstigator)
+{
+	auto AIC = Cast<ASAIController>(GetController());
+	if (AIC)
+	{
+		AIC->GetBrainComponent()->StopLogic("Killed");
+	}
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->DisableMovement();
+		
+	ConvertToRagdoll(ActorInstigator);
+
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->RemoveFromParent();
+	}
+		
+	SetLifeSpan(10.0f);
+}
+
 void ASAICharacter::OnHealthChanged(AActor* ActorInstigator, class USAttributeComponent* OwningComp, float NewHealth,
-	float Delta)
+                                    float Delta)
 {
 	if (ActorInstigator && ActorInstigator != this)
 	{
@@ -47,26 +90,21 @@ void ASAICharacter::OnHealthChanged(AActor* ActorInstigator, class USAttributeCo
 		{
 			MeshComp->SetScalarParameterValueOnMaterials(FName("TimeToHit"), GetWorld()->TimeSeconds);	
 		}
+
+		if (HealthBarWidget == nullptr)
+		{
+			if (ensure(HealthBarWidgetClass))
+			{
+				HealthBarWidget = CreateWidget<USWorldUserWidget>(GetWorld(), HealthBarWidgetClass);
+				HealthBarWidget->AttachedActor = OwningComp->GetOwner();
+				HealthBarWidget->AddToViewport();
+			}
+		}
 	}
 	
 	if (Delta < 0 && NewHealth <= 0)
 	{
-		auto AIC = Cast<ASAIController>(GetController());
-		if (AIC)
-		{
-			AIC->GetBrainComponent()->StopLogic("Killed");
-		}
-
-		GetMesh()->SetAllBodiesSimulatePhysics(true);
-		GetMesh()->SetCollisionProfileName("Ragdoll");
-
-		FVector AwayFromInstigator = (GetActorLocation() -  ActorInstigator->GetActorLocation()).GetSafeNormal();
-		FVector Impulse = ( AwayFromInstigator + FVector::UpVector) * 5000.0f; // Adjust as needed
-
-		// Apply impulse to all bodies (starting from root)
-		GetMesh()->AddImpulseToAllBodiesBelow(Impulse, NAME_None, false); 
-		
-		SetLifeSpan(10.0f);
+		Die(ActorInstigator);
 	}
 }
 

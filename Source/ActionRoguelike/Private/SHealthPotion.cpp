@@ -13,13 +13,13 @@ ASHealthPotion::ASHealthPotion()
 }
 
 void ASHealthPotion::Interact_Implementation(APawn* InstigatorPawn)
-{
-	if (!bEnabled)
+{	
+	Super::Interact_Implementation(InstigatorPawn);
+	
+	if (!CanInteract(InstigatorPawn))
 	{
 		return;
 	}
-	
-	Super::Interact_Implementation(InstigatorPawn);
 	
 	UE_LOG(LogTemp, Display, TEXT("Health Potion interact!"));
 
@@ -28,23 +28,8 @@ void ASHealthPotion::Interact_Implementation(APawn* InstigatorPawn)
 	{
 		if (AttrComp->ApplyHealthChange(InstigatorPawn,Health))
 		{
-			if (InteractSound)
-			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
-			}
-
-			MeshComp->SetVisibility(false);
-			bEnabled = false;
-
-			FTimerHandle TimerHandle_Unused;
-			GetWorldTimerManager().SetTimer(TimerHandle_Unused, this,&ASHealthPotion::Respawn, 10.0f);
+			InteractSuccessful();
 		}
 	}
 }
 
-void ASHealthPotion::Respawn()
-{
-	UE_LOG(LogTemp, Display, TEXT("Health Potion Respawn!"));
-	bEnabled = true;
-	MeshComp->SetVisibility(true);
-}

@@ -16,7 +16,7 @@ void USBTS_CheckHealth::UpdateHealthPercent(UBehaviorTreeComponent& OwnerComp)
 	}
 
 	auto SelfActor =Controller->GetPawn();
-	if (!ensure(SelfActor))
+	if (!IsValid(SelfActor))
 	{
 		return;
 	}

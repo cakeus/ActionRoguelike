@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AI/SAICharacter.h"
 #include "Components/ActorComponent.h"
 #include "SAttributeComponent.generated.h"
 
@@ -32,6 +33,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetHealthMax() const;
+
+	UFUNCTION(BlueprintCallable)
+	void Kill(AActor* Instigator);
 
 protected:
 	

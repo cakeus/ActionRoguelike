@@ -11,6 +11,8 @@
 #include "SAttributeComponent.h"
 #include "SInteractionComponent.h"
 #include "SProjectile.h"
+#include "Actions/SActionComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "EntitySystem/MovieSceneEntitySystemRunner.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -31,6 +33,7 @@ ASCharacter::ASCharacter()
 
 	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
 
+	ActionComp = CreateDefaultSubobject<USActionComponent>("ActionComp");
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	
@@ -75,17 +78,34 @@ void ASCharacter::AttackTimeElapsed()
 
 void ASCharacter::PrimaryAttack()
 {
-	StartProjectileAttack(ProjectileClass);
+	ActionComp->StartAction("PrimaryAttack",this);
 }
 
 void ASCharacter::SecondaryAttack()
 {	
-	StartProjectileAttack(SpecialProjectileClass);
+	ActionComp->StartAction("SecondaryAttack",this);
 }
 
 void ASCharacter::DashAttack()
 {
-	StartProjectileAttack(DashProjectileClass);
+	ActionComp->StartAction("Dash",this);
+}
+
+void ASCharacter::Sprint(const FInputActionInstance& InputAction)
+{
+	ETriggerEvent TriggerEvent = InputAction.GetTriggerEvent();
+	//UE_LOG(LogTemp, Warning, TEXT("Sprint Input %d"), TriggerEvent);
+	
+	if (TriggerEvent == ETriggerEvent::Started)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Sprinting Start"));
+		ActionComp->StartAction("Sprint", this);
+	}
+	else if (TriggerEvent == ETriggerEvent::Completed || TriggerEvent == ETriggerEvent::Canceled)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Sprinting Stop"));
+		ActionComp->StopAction("Sprint", this);
+	}
 }
 
 void ASCharacter::StartProjectileAttack(TSubclassOf<ASProjectile> ProjClass)
@@ -95,7 +115,7 @@ void ASCharacter::StartProjectileAttack(TSubclassOf<ASProjectile> ProjClass)
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);	
-	//ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
 	auto CastFX =ProjClass->GetDefaultObject<ASProjectile>()->CastFX;
 	if (CastFX)
 	{
@@ -146,6 +166,11 @@ void ASCharacter::OnHealthChanged(AActor* ActorInstigator, class USAttributeComp
 		}
 	}
 	
+}
+
+FVector ASCharacter::GetPawnViewLocation() const
+{
+	return CameraComp->GetComponentLocation();
 }
 
 // Called every frame
@@ -219,6 +244,8 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EnhancedInputComponent->BindAction(DashAttackAction, ETriggerEvent::Triggered, this, &ASCharacter::DashAttack);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASCharacter::Jump);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASCharacter::Interact);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ASCharacter::Sprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASCharacter::Sprint);
 	}
 	
 	/*PlayerInputComponent->BindAxis("MoveForward",this,&ASCharacter::MoveForward);
@@ -230,8 +257,16 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 void ASCharacter::Die()
 {
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->DisableMovement();
+
 	GetCharacterMovement()->StopMovementImmediately();
 	auto playerController = Cast<APlayerController>(GetController());
 	DisableInput(playerController);
+}
+
+void ASCharacter::HealSelf(float Amount)
+{
+	AttributeComp->ApplyHealthChange(this, Amount);
 }
 

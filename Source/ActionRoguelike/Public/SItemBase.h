@@ -18,16 +18,34 @@ public:
 
 	
 protected:
+	
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+	
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> MeshComp;
 
 
-	UPROPERTY(EditAnywhere)	
+	UPROPERTY(EditDefaultsOnly=Item)
 	TObjectPtr<USoundCue> InteractSound;
 	
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UPROPERTY(EditDefaultsOnly, Category=Item)	
+	int Cost;
 
+	UPROPERTY(EditDefaultsOnly, Category=Item)	
+	float Cooldown;
+
+	virtual void InteractSuccessful();
+
+	UFUNCTION()
+	void Respawn();
+
+	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite, Category=Item)
+	bool bEnabled = true;
+
+	UFUNCTION(BlueprintCallable, Category=Item)
+	bool CanInteract(APawn* Interactor) const;
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

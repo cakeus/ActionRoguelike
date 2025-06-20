@@ -4,6 +4,10 @@
 #include "SInteractionComponent.h"
 
 #include "SGameplayInterface.h"
+#include "SWorldUserWidget.h"
+
+static TAutoConsoleVariable<bool> CVarDebugDraw(TEXT("su.DebugDraw"), false, TEXT("Enable debug drawing"), ECVF_Cheat);
+
 
 // Sets default values for this component's properties
 USInteractionComponent::USInteractionComponent()
@@ -17,7 +21,14 @@ USInteractionComponent::USInteractionComponent()
 
 void USInteractionComponent::PrimaryInteract()
 {
-	FHitResult HitResult;
+	if (FocusedActor)
+	{
+		ServerInteract(FocusedActor);
+	}
+}
+
+void USInteractionComponent::FindBestInteractable()
+{
 	FCollisionObjectQueryParams ObjectQueryParams;
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
 
@@ -35,21 +46,66 @@ void USInteractionComponent::PrimaryInteract()
 	{
 		return;
 	}
-	
+
+	TArray<FHitResult> HitResults;
 	PlayerController->GetPlayerViewPoint(Start, Rotation);
+	FCollisionShape Shape;
+	Shape.SetSphere(30);
 
 	FVector End = Start + Rotation.Vector() *  1000.0f;
-	GetWorld()->LineTraceSingleByObjectType(HitResult, Start, End, ObjectQueryParams);
+	GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, ObjectQueryParams, Shape);
 
-	if (AActor* HitActor = HitResult.GetActor())
+	FocusedActor = nullptr;;
+	for (FHitResult HitResult : HitResults)
 	{
-		if (HitActor->Implements<USGameplayInterface>())
+		if (AActor* HitActor = HitResult.GetActor())
 		{
-			ISGameplayInterface::Execute_Interact(HitActor, Cast<APawn>(GetOwner()));
+			if (HitActor->Implements<USGameplayInterface>())
+			{
+				FocusedActor = HitActor;
+				break;
+			}
 		}
 	}
 
-	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 10.0f);
+	if (FocusedActor)
+	{
+		if (Widget == nullptr && ensure(WidgeClass))
+		{
+			Widget = CreateWidget<USWorldUserWidget>(GetWorld(), WidgeClass);
+		}
+
+		if (Widget != nullptr)
+		{
+			Widget->AttachedActor = FocusedActor;;
+			
+			if (!Widget->IsInViewport())
+			{
+				Widget->AddToViewport();	
+			}					
+		}
+	}
+	else
+	{
+		if (Widget)
+		{
+			Widget->RemoveFromParent();
+			Widget = nullptr;
+		}
+	}
+	
+	if (CVarDebugDraw.GetValueOnGameThread())
+	{
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f, 0, 10.0f);
+	}
+}
+
+void USInteractionComponent::ServerInteract_Implementation(AActor *TargetActor)
+{
+	if (TargetActor)
+	{
+		ISGameplayInterface::Execute_Interact(TargetActor, Cast<APawn>(GetOwner()));
+	}
 }
 
 
@@ -68,6 +124,10 @@ void USInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
+	auto Owner = Cast<APawn>(GetOwner());
+	if (Owner && Owner->IsLocallyControlled())
+	{
+		FindBestInteractable();
+	}
 }
 

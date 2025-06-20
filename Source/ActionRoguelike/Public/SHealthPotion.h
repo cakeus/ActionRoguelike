@@ -18,13 +18,9 @@ public:
 
 	virtual void Interact_Implementation(APawn* InstigatorPawn) override;
 
-protected:
-	
-	void Respawn();
+protected:	
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float Health;
-	
-	UPROPERTY(VisibleDefaultsOnly,BlueprintReadWrite)
-	bool bEnabled = true;
+
 };

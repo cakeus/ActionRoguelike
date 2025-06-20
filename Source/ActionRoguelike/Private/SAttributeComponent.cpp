@@ -4,6 +4,10 @@
 #include "SAttributeComponent.h"
 
 #include "SCharacter.h"
+#include "SGameModeBase.h"
+
+static TAutoConsoleVariable<float> CVarDamageMultiplier(TEXT("su.DamageMultiplier"), 1.0f, TEXT("Multiply all damage"), ECVF_Cheat);
+
 
 // Sets default values for this component's properties
 USAttributeComponent::USAttributeComponent()
@@ -52,9 +56,24 @@ float USAttributeComponent::GetHealthMax() const
 	return HealthMax;
 }
 
+void USAttributeComponent::Kill(AActor* Instigator)
+{
+	ApplyHealthChange(Instigator, -GetHealthMax());
+}
+
 bool USAttributeComponent::ApplyHealthChange( AActor* Instigator, float Delta)
 {
-	if (Health > 0 || Health < HealthMax)
+	if (Delta < 0 && !GetOwner()->CanBeDamaged())
+	{
+		return false;
+	}
+
+	if (Delta < 0)
+	{
+		Delta *= CVarDamageMultiplier.GetValueOnGameThread();
+	}
+	
+	if (Health > 0)
 	{
 		Health = FMath::Clamp(Health+ Delta,0,HealthMax);
 		
@@ -71,12 +90,19 @@ bool USAttributeComponent::ApplyHealthChange( AActor* Instigator, float Delta)
 				GetOwner()->Destroy();
 			}
 
-			if (auto Character = Cast<ASCharacter>(GetOwner()))
+			// if (auto Character = Cast<ASCharacter>(GetOwner()))
+			// {
+			// 	Character->Die();
+			// }
+
+			auto GameMode = Cast<ASGameModeBase>(GetWorld()->GetAuthGameMode());
+			if (GameMode != nullptr)
 			{
-				Character->Die();
+				GameMode->OnActorKilled(GetOwner(), Instigator);
 			}
+			
+			return true;
 		}
-		return true;
 	}
 
 

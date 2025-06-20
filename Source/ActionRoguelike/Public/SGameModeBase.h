@@ -25,6 +25,9 @@ public:
 	UFUNCTION()
 	void OnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus);
 
+	virtual void OnActorKilled(AActor *Actor, AActor *Killer);
+	void TryToAwardCredits(AActor* KilledActor, AActor* Killer);
+
 protected:
 	UFUNCTION()
 	void SpawnEnemy();
@@ -40,5 +43,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="AI")
 	float SpawnTime;
-	
+
+	UFUNCTION(Exec)
+	void KillAllAI();
+
+	UFUNCTION()
+	void RespawnPlayer(APlayerController *Controller);
 };
